@@ -1,0 +1,454 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Usage Guide &mdash; AOIC 1.0 beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0 beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="AOIC 1.0 beta documentation" href="index.html" />
+    <link rel="next" title="Source Documentation" href="srcdocs.html" />
+    <link rel="prev" title="Requirements" href="requirements.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="srcdocs.html" title="Source Documentation"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="requirements.html" title="Requirements"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AOIC 1.0 beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="usage-guide">
+<h1>Usage Guide<a class="headerlink" href="#usage-guide" title="Permalink to this headline">¶</a></h1>
+<p>The <abbr title="ANOPP2 OpenMDAO Interface Code">AOIC</abbr> contains two classes: <cite>Anopp2Component</cite> and <cite>Anopp2Optimize</cite>.
+The <cite>Anopp2Component</cite> class contains the essence of all interactions with ANOPP2.
+Details of the <cite>Anopp2Component</cite> class used in this specific example are provided herein.
+Users desiring to use ANOPP2 for optimization through OpenMDAO are required to develop similar codes with appropriate ANOPP2 function calls and other necessary associated files (see ANOPP2 Manuals for more information).
+This example code is tested through a test code, <cite>test_anopp2.py</cite>.</p>
+<p>In this case, the noise generated during the takeoff of a <cite>Tube and Wing</cite> aircraft is modeled through ANOPP2 and the noise along a sideline parallel to the takeoff direction on the ground is predicted.
+The location along the sideline at which the noise (measured through the acoustic metric <abbr title="Effective Perceived Noise Level">EPNL</abbr>) reaches its maximum is determined through OpenMDAO.
+The details of this <abbr title="ANOPP2 OpenMDAO Interface Code">AOIC</abbr> are explained here.</p>
+<div class="section" id="anopp2component">
+<h2>Anopp2Component<a class="headerlink" href="#anopp2component" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="initialization">
+<h3>Initialization<a class="headerlink" href="#initialization" title="Permalink to this headline">¶</a></h3>
+<p><strong>Step 1. Initialize ANOPP2 API</strong>: The ANOPP2 Command Executive API [<a class="reference internal" href="#lopes2014a">LOPES2014A</a>] is initialized first through the following command: <code class="docutils literal"><span class="pre">ANOPP2.a2py_exec_init_api</span> <span class="pre">()</span></code>.</p>
+<p><strong>Step 2. Initialize local variables</strong>: Initialize the Atmosphere and Flight Path tags.</p>
+<p><strong>Step 3. Create an Observer</strong>: An observer [<a class="reference internal" href="#lopes2014b">LOPES2014B</a>] is defined as a point cloud (a collection of several points in space, also referred to as <cite>nodes</cite>) along the sideline defined by its x (along the direction of the flight on the ground), y (perpendicular to the direction of flight on the ground), and z (perpendicular to the ground) axes. The observer is defined in a configuration file, <cite>observer.config</cite> placed in the current working folder.  This configuration file is provided below:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24</pre></div></td><td class="code"><div class="highlight"><pre>!------------------------------------------------------------------------------------
+! This is the namelist that defines the ground observer positions that will be passed 
+! to ANOPP during execution.  This configuration is for several observer positions 
+! along the sideline of a takeoff flightpath.
+!------------------------------------------------------------------------------------
+&amp;ObserverPointCloudNamelist
+ 
+  ! Since our microphone is stationary, this parameter is 0, meaning the microphone 
+  ! is not moving within the ground frame of reference.
+  nFrameChanges = 0
+
+/
+  !----------------------------------------------------------------------------------
+  ! The point will be anywhere along the sideline of the takeoff maneuver.  The line 
+  ! is 1476 feet (or 449.8848 meters) to the side of the flight path.  The OpenMDAO 
+  ! is expected to locate the the observer position at which maximum EPNdB is found. 
+  !----------------------------------------------------------------------------------
+  &amp;PointCloudNamelist
+  
+    ! This is the number of nodes.
+    nNodes = 1
+    
+  /
+  2410.0, 449.8848, 0.0
+</pre></div>
+</td></tr></table></div>
+<p>The observer is created through the following ANOPP2 command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>             \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_create</span> \
+   <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">),</span> <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;observer.config&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution">
+<h3>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h3>
+<p>The <cite>Anopp2.py</cite> performs the following steps as part of its execution.
+Each of these steps are executed for each iteration to determine the noise (EPNL) corresponding to that observer location.</p>
+<p><strong>Step 4. Create a New Observer Node</strong>: A new node is introduced into the observer at a location whose <code class="docutils literal"><span class="pre">x</span></code> coordinate is provided by the optimizer and the <code class="docutils literal"><span class="pre">y</span></code> and <code class="docutils literal"><span class="pre">z</span></code> coordinates are those of the previous node.
+So, the number of nodes in the observer is first obtained through the following function call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_number_of_nodes</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The position of the last node in the observer is obtained through the following function call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>               \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_position</span> \
+    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">a2_global</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where, <code class="docutils literal"><span class="pre">self.fltPosition</span></code> is an array containing the <code class="docutils literal"><span class="pre">x</span></code>, <code class="docutils literal"><span class="pre">y</span></code>, and <code class="docutils literal"><span class="pre">z</span></code> coordinates of the position of the last node in the observer.</p>
+<p>The first value of the Position array (x coordinate) is replaced with the value provided by the optimizer: <code class="docutils literal"><span class="pre">self.fltPosition[0]</span> <span class="pre">=</span> <span class="pre">self.x</span></code>.
+A new node is added in the observer point cloud at the location corresponding to the values of the <code class="docutils literal"><span class="pre">fltPosition</span></code> array through the following function call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_new_node</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Step 5. Create an AnoppComplete Functional Module</strong>: In this case, ANOPP2&#8217;s AnoppComplete Functional Module [LOPES2014C] is  used to predict the EPNL.
+This functional module is invoked in ANOPP2 through the following routine call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                                                                         \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_create_functional_module</span>                                          \
+   <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intAnoppCompleteTag</span><span class="p">),</span>                                               \
+    <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;AnoppComplete.config&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nInputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intInputTags</span><span class="p">,</span> \
+    <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">),</span> <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="p">),</span> <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The settings and details required for using this Functional Module are provided in the Configuration file, <cite>AnoppComplete.config</cite>.
+The contents of this file is provided here.</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45</pre></div></td><td class="code"><div class="highlight"><pre>!------------------------------------------------------------------------------------
+! This is the input file for the ANOPP Complete Prediction using ANOPP modules to
+! predict noise. The output of this prediction method is what is with the ANOPP
+! Prediction module.
+!------------------------------------------------------------------------------------
+&amp;AnoppCompleteNamelist
+
+  ! Specify the ANOPP executable to be used including the path.  The ANOPP executable
+  ! should be located in the current directory.
+  strExecutableFileName = &quot;anopp.exe&quot;
+
+  ! This is the input deck that contains the sound sources and the propagation to the 
+  ! observer positions.  This includes all noise sources and their propagation (a 
+  ! complete prediction).
+  strInputDeck = &quot;Takeoff-Complete.inp&quot;
+
+  ! ANOPP Output File name.  Once ANOPP is executed, the output of ANOPP is copied to
+  ! this file name.  A user may peruse this filename if they wish to see how ANOPP 
+  ! was executed and any additional output it may provide.
+  strOutputFileName = &quot;TubeAndWing-Simple.out&quot;
+
+  ! Specify whether you want the ANOPP Input Deck to be created by ANOPP2 (.TRUE.) or
+  ! if the input deck is already available and you want to use it (.FALSE.). This is 
+  ! helpful if you just want ANOPP to execute an already existing deck (useful for 
+  ! debugging).
+  blnOverwriteInputDeck = .TRUE.
+
+  ! This is a list of strings that are the names of th files to be parse after ANOPP
+  ! is executed.  These names must correspond to the names of the LEVOUT parameter 
+  ! in the ANOPP input deck.  These are the names of the results to be taken out of 
+  ! the ANOPP run. The order matters.
+  strLevFilenames = &quot;TOTAL.OUT&quot;, &quot;ENGINE.OUT&quot;, &quot;AIRFRAME.OUT&quot;
+
+  ! This is the flag that turns on metadata for this module.  Metadata for the ANOPP
+  ! Complete prediction module includes the geometric emission angles as a function 
+  ! of time.  This is written out by ANOPP if the IPRINT parameter is set to 3 right
+  ! before the EXECUTE GEO command in the input deck.  If that is set and this flag
+  ! is set to true, a Metadata folder will be created, and a file containing the 
+  ! emission angles as a function of reception time will be written out.
+  blnWriteMetadata = .TRUE.
+
+  ! This is the name of the metadata file being written out.
+  strMetadataFileName = &#39;EmissionAngles.txt&#39;
+
+/
+</pre></div>
+</td></tr></table></div>
+<p>The name of an ANOPP input deck template, <cite>Takeoff-Complete.inp</cite>, is specified in the Configuration file, <cite>AnoppComplete.config</cite>.
+This input deck template is required for executing ANOPP as part of this functional module.
+This input deck template contains all the specifications of the aircraft frame and engine, as well as the ANOPP functional modules to be executed to obtain noise.
+The template contains the marker, <code class="docutils literal"><span class="pre">$$$</span> <span class="pre">A2_GROUND_OBSERVER</span></code> that enables the AnoppComplete functional module to insert the current observer in the ANOPP input deck.
+The ground effects are turned off through the statement, <code class="docutils literal"><span class="pre">PARAM</span> <span class="pre">GROUND</span> <span class="pre">=</span> <span class="pre">.FALSE.</span> <span class="pre">$</span></code> in the template.
+The input deck template instructs ANOPP to execute and obtain noise from jet (JET), treated inlet (INLETT), treated aft fan (AFTFNT), GE Core (GECOR), gear (GEAR), flap (FLAP), and trailing edge (TRAL).
+It also instructs ANOPP to add the noise from all the sources and provide that as the Total noise, add JET, INLETT, AFTFNT, and GECOR as Engine noise, and add GEAR, FLAP, and TRAL as Airframe noise. The AnoppComplete functional module inserts the <cite>Total</cite>, <cite>Engine</cite>, and <cite>Airframe</cite> noise into the ANOPP2 Observer as the first, second, and the third result, respectively.</p>
+<p><strong>Step 6. Creating an ANOPP2 Mission</strong>: An ANOPP2 Mission is created through the following routine call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                                                                        \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_create_mission</span>                                                   \
+   <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intMissionTag</span><span class="p">),</span> <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">intAtmosphereTag</span><span class="p">,</span> \
+    <span class="bp">self</span><span class="o">.</span><span class="n">intFlightPathTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nSourceTimes</span><span class="p">,</span>                                       \
+    <span class="bp">self</span><span class="o">.</span><span class="n">nMaximumSingleTimeFunctionalModules</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nTimeSeriesFunctionalModules</span><span class="p">,</span>    \
+    <span class="bp">self</span><span class="o">.</span><span class="n">fltSourceTimes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intSingleTimeFunctionalModuleTags</span><span class="p">,</span>                    \
+    <span class="bp">self</span><span class="o">.</span><span class="n">intTimeSeriesFunctionalModulesTags</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This instructs ANOPP2 what functional module is to be executed and also provides the tags of all the inputs required for executing this mission.</p>
+<p><strong>Step 7. Execute an ANOPP2 Mission</strong>: The ANOPP2 mission is executed through the following routine call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_execute_mission</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intMissionTag</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Upon execution, the acoustic data corresponding to the observer is calculated and placed in the Observer in terms of Octave Band <abbr title="Sound Pressure Level">SPL</abbr>.</p>
+<p><strong>Step 8. Obtaining the Noise Data</strong>: The acoustic data EPNL is calculated from the SPL through the following routine call:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                                                                  \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_calc_metric</span>                                                 \
+   <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">,</span> <span class="n">a2_aa_epnl</span><span class="p">,</span> \
+    <span class="n">a2_obs_complete</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The EPNL value corresponding to the last node added through Step 4 is obtained through the Observer API routine call as shown below.
+Because the intent is to find the location corresponding to maximum total noise, the EPNL corresponding to the first result, that is, the <cite>Total</cite> noise is obtained.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                                                                      \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_get_epnl</span>                                                        \
+    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="p">,</span> \
+     <span class="bp">self</span><span class="o">.</span><span class="n">fltD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltTimeRange</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The EPNL, the duration, and the time range are obtained for the observer position.</p>
+<p><strong>Step 9. Getting the Optimizing Variable Value</strong>: The goal of this AOIC is to find the position of maximum noise.
+This is equivalent to minimizing the reciprocal of the EPNdB value predicted.
+To avoid very small fractions, the reciprocal was multiplied with 1000.
+In this AOIC, the variable <code class="docutils literal"><span class="pre">Epndb_inverse</span></code> was minimized.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">Epndb_inverse</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The EPNL values were exported to a Tecplot-friendly file, <cite>Epnl.out.dat</cite> through the following routine:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                                                                 \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_export</span>                                                     \
+    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>                             \
+     <span class="n">create_string_buffer</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strOutputFile</span><span class="p">)),</span> <span class="n">a2_aa_epnl</span><span class="p">,</span> <span class="n">a2_global</span><span class="p">,</span> \
+     <span class="n">a2_formatted</span><span class="p">,</span> <span class="n">a2_tecplot</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Finally, the result in the Observer is deleted because it is no longer needed.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">intSuccess</span> <span class="o">=</span>                     \
+  <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_delete_results</span> \
+    <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="anopp2optimize">
+<h2>Anopp2Optimize<a class="headerlink" href="#anopp2optimize" title="Permalink to this headline">¶</a></h2>
+<p>The Anopp2Optimize code should contain a function, <cite>configure</cite> that specifies the optimzer, the component, the objective variable, the design variable, as well as the optimizing parameters.</p>
+<p>The driver, <cite>CONMINdriver</cite> is used in this optimization through the following statement:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;driver&#39;</span><span class="p">,</span> <span class="n">CONMINdriver</span><span class="p">())</span>
+</pre></div>
+</div>
+<p>The component, <cite>Anopp2Component</cite> is introduced in the <cite>configure</cite> function as <cite>anopp2</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;anopp2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The objective variable, <cite>Epndb_inverse</cite>  and the design variable, <cite>x</cite> defined in <cite>Anopp2Component</cite> are accessed in this function through <cite>anopp2.Epndb_inverse</cite> and <cite>anopp2.x</cite>.</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">add_objective</span><span class="p">(</span><span class="s">&#39;anopp2.Epndb_inverse&#39;</span><span class="p">)</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s">&#39;anopp2.x&#39;</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mf">2400.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">3500.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The CONMIN specific settings used in this optimization are as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">itmax</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">fdch</span> <span class="o">=</span> <span class="mf">0.001</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">fdchm</span> <span class="o">=</span> <span class="mf">0.0001</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">ctlmin</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">delfun</span> <span class="o">=</span> <span class="mf">0.01</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">conmin_diff</span> <span class="o">=</span> <span class="bp">True</span>
+<span class="bp">self</span><span class="o">.</span><span class="n">iIteration</span> <span class="o">=</span> <span class="mi">0</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="test-aoic-py">
+<h2>test_aoic.py<a class="headerlink" href="#test-aoic-py" title="Permalink to this headline">¶</a></h2>
+<p>The Python test code that runs the optimizer and iterates to find the location along the sideline that has maximum noise is <cite>test_aoic.py</cite>.
+This test code is executed after launching the OpenMDAO framework through the following command:</p>
+<div class="highlight-python"><div class="highlight"><pre>python test_Anopp2_optimize.py
+</pre></div>
+</div>
+<p>The Python code executes ANOPP2 iteratively with various values of the design variable (the observer x coordinate) and obtains the value of the objective variable to be minimzed.
+The optimizer stops on finding a location at which the noise is maximum.</p>
+</div>
+<div class="section" id="results">
+<h2>Results<a class="headerlink" href="#results" title="Permalink to this headline">¶</a></h2>
+<p>The EPNdB values at various locations along the sideline parallel to the flight path were independently obtained at intervals of 100m.
+An analysis of the EPNdB distribution along the sideline indicates that there exists a local maximum around the location where the aircraft takes off, at approximately 2500m from the aircraft starting location.
+The EPNdB values corresponding to observer positions along the sideline from 2400m to 2700m were independently obtained at intervals of 6m.
+The EPNdB values at various observer locations along the sideline were also obtained through this <cite>AOIC</cite>.
+These results are plotted as <a class="reference internal" href="#epndb-along-a-sideline">EPNdB along a sideline</a>.</p>
+<div class="figure align-center" id="id1">
+<span id="epndb-along-a-sideline"></span><img alt="_images/Optimized.png" src="_images/Optimized.png" />
+<p class="caption"><span class="caption-text">Variation of EPNL along a sideline showing the sequence of steps followed by OpenMDAO in arriving at the location corresponding to maximum EPNdB</span></p>
+</div>
+<p>The observer locations and the corresponding EPNdB values as obtained through <cite>AOIC</cite> are also plotted in <a class="reference internal" href="#epndb-along-a-sideline">EPNdB along a sideline</a> as a sequence of steps (red lines and dots).
+The location as found by OpenMDAO that corresponds to maximum EPNdB value along the sideline is at <strong>2538.5m</strong>.</p>
+<table class="docutils citation" frame="void" id="lopes2014a" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[LOPES2014A]</td><td>Lopes, L. V. and Burley, C. L., <em>ANOPP2 Command Executive API Reference Manual</em>, National Aeronautics and Space Administration, version 1.0.0, July 2014.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="lopes2014b" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[LOPES2014B]</td><td>Lopes, L. V. and Burley, C. L., <em>ANOPP2 Observer API Reference Manual</em>, National Aeronautics and Space Administration, version 1.0.0, July 2014.</td></tr>
+</tbody>
+</table>
+<table class="docutils citation" frame="void" id="lopes2014c" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[LOPES2014C]</td><td>Lopes, L. V. and Burley, C. L., <em>ANOPP2 Functional Module Manual</em>, National Aeronautics and Space Administration, version 1.0.0, July 2014.</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Usage Guide</a><ul>
+<li><a class="reference internal" href="#anopp2component">Anopp2Component</a><ul>
+<li><a class="reference internal" href="#initialization">Initialization</a></li>
+<li><a class="reference internal" href="#execution">Execution</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#anopp2optimize">Anopp2Optimize</a></li>
+<li><a class="reference internal" href="#test-aoic-py">test_aoic.py</a></li>
+<li><a class="reference internal" href="#results">Results</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="requirements.html"
+                        title="previous chapter">Requirements</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="srcdocs.html"
+                        title="next chapter">Source Documentation</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/usage.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="srcdocs.html" title="Source Documentation"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="requirements.html" title="Requirements"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AOIC 1.0 beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright .
+      Last updated on Jun 11, 2015.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>

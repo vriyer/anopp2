@@ -1,0 +1,3 @@
+graft src/anopp2/sphinx_build/html
+recursive-include src/anopp2/test *.py
+

@@ -1,0 +1,2 @@
+[openmdao.anopp2]
+anopp2.anopp2.anopp2=anopp2.anopp2:anopp2

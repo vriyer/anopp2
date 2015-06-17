@@ -1,0 +1,16 @@
+MANIFEST.in
+README.txt
+setup.cfg
+setup.py
+src/anopp2/__init__.py
+src/anopp2/anopp2.py
+src/anopp2.egg-info/PKG-INFO
+src/anopp2.egg-info/SOURCES.txt
+src/anopp2.egg-info/dependency_links.txt
+src/anopp2.egg-info/entry_points.txt
+src/anopp2.egg-info/not-zip-safe
+src/anopp2.egg-info/requires.txt
+src/anopp2.egg-info/top_level.txt
+src/anopp2/test/ANOPP2_api.py
+src/anopp2/test/__init__.py
+src/anopp2/test/test_anopp2.py

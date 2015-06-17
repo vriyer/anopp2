@@ -1,0 +1,1157 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Source Documentation &mdash; AOIC 1.0 beta documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0 beta',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="AOIC 1.0 beta documentation" href="index.html" />
+    <link rel="next" title="Package Metadata" href="pkgdocs.html" />
+    <link rel="prev" title="Usage Guide" href="usage.html" /> 
+  </head>
+  <body role="document">
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="pkgdocs.html" title="Package Metadata"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage Guide"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AOIC 1.0 beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="source-documentation">
+<span id="anopp2-src-label"></span><h1>Source Documentation<a class="headerlink" href="#source-documentation" title="Permalink to this headline">¶</a></h1>
+<p id="index-0">The source code <cite>AOIC.py</cite> that uses ANOPP2 routines to identify the location along the sideline of maximum noise is provided as <a class="reference internal" href="#aoic-py">AOIC.py</a>.</p>
+<div class="section" id="aoic-py">
+<h2>AOIC.py<a class="headerlink" href="#aoic-py" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+ 10
+ 11
+ 12
+ 13
+ 14
+ 15
+ 16
+ 17
+ 18
+ 19
+ 20
+ 21
+ 22
+ 23
+ 24
+ 25
+ 26
+ 27
+ 28
+ 29
+ 30
+ 31
+ 32
+ 33
+ 34
+ 35
+ 36
+ 37
+ 38
+ 39
+ 40
+ 41
+ 42
+ 43
+ 44
+ 45
+ 46
+ 47
+ 48
+ 49
+ 50
+ 51
+ 52
+ 53
+ 54
+ 55
+ 56
+ 57
+ 58
+ 59
+ 60
+ 61
+ 62
+ 63
+ 64
+ 65
+ 66
+ 67
+ 68
+ 69
+ 70
+ 71
+ 72
+ 73
+ 74
+ 75
+ 76
+ 77
+ 78
+ 79
+ 80
+ 81
+ 82
+ 83
+ 84
+ 85
+ 86
+ 87
+ 88
+ 89
+ 90
+ 91
+ 92
+ 93
+ 94
+ 95
+ 96
+ 97
+ 98
+ 99
+100
+101
+102
+103
+104
+105
+106
+107
+108
+109
+110
+111
+112
+113
+114
+115
+116
+117
+118
+119
+120
+121
+122
+123
+124
+125
+126
+127
+128
+129
+130
+131
+132
+133
+134
+135
+136
+137
+138
+139
+140
+141
+142
+143
+144
+145
+146
+147
+148
+149
+150
+151
+152
+153
+154
+155
+156
+157
+158
+159
+160
+161
+162
+163
+164
+165
+166
+167
+168
+169
+170
+171
+172
+173
+174
+175
+176
+177
+178
+179
+180
+181
+182
+183
+184
+185
+186
+187
+188
+189
+190
+191
+192
+193
+194
+195
+196
+197
+198
+199
+200
+201
+202
+203
+204
+205
+206
+207
+208
+209
+210
+211
+212
+213
+214
+215
+216
+217
+218
+219
+220
+221
+222
+223
+224
+225
+226
+227
+228
+229
+230
+231
+232
+233
+234
+235
+236
+237
+238
+239
+240
+241
+242
+243
+244
+245
+246
+247
+248
+249
+250
+251
+252
+253
+254
+255
+256
+257
+258
+259
+260
+261
+262
+263
+264
+265
+266
+267
+268
+269
+270
+271
+272
+273
+274
+275
+276
+277
+278
+279
+280
+281
+282
+283
+284
+285
+286
+287
+288
+289
+290
+291
+292
+293
+294
+295
+296
+297
+298
+299
+300
+301
+302
+303
+304
+305
+306
+307
+308
+309
+310
+311
+312
+313
+314
+315
+316
+317
+318
+319
+320
+321
+322
+323
+324
+325
+326
+327
+328
+329
+330
+331
+332
+333
+334
+335
+336
+337
+338
+339
+340
+341
+342
+343
+344
+345
+346
+347
+348
+349
+350
+351
+352
+353
+354
+355
+356
+357
+358
+359
+360
+361
+362
+363
+364
+365
+366
+367
+368
+369
+370
+371
+372
+373
+374
+375
+376
+377
+378
+379
+380
+381
+382
+383
+384
+385
+386
+387
+388
+389
+390
+391
+392
+393
+394
+395
+396
+397
+398
+399
+400
+401
+402
+403
+404
+405
+406
+407
+408
+409
+410
+411
+412
+413
+414
+415
+416
+417
+418
+419
+420
+421
+422
+423
+424
+425
+426
+427
+428
+429
+430
+431
+432
+433
+434
+435
+436
+437
+438
+439
+440
+441
+442
+443
+444
+445
+446
+447
+448
+449
+450
+451</pre></div></td><td class="code"><div class="highlight"><pre><span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Anopp2&#39;</span><span class="p">]</span>
+
+<span class="c"># Import the Component class from the OpenMDAO Main API.</span>
+<span class="kn">from</span> <span class="nn">openmdao.main.api</span> <span class="kn">import</span> <span class="n">Component</span>
+
+<span class="c"># Import Float class from the Datatypes library in OpenMDAO.</span>
+<span class="kn">from</span> <span class="nn">openmdao.lib.datatypes.api</span> <span class="kn">import</span> <span class="n">Float</span>
+
+<span class="c"># Import the OpenMDAO library components. We need to import the External Code.</span>
+<span class="kn">from</span> <span class="nn">openmdao.lib.components.external_code</span> <span class="kn">import</span> <span class="n">ExternalCode</span>
+
+<span class="c"># Import the FileParser and InputFileGeneration functions residing in Filewrap utility</span>
+<span class="c"># in OpenMDAO</span>
+<span class="kn">from</span> <span class="nn">openmdao.util.filewrap</span> <span class="kn">import</span> <span class="n">FileParser</span><span class="p">,</span> <span class="n">InputFileGenerator</span>
+
+<span class="c"># Import the Float datatype defined in OpenMDAO library required in AOIC.</span>
+<span class="kn">from</span> <span class="nn">openmdao.lib.datatypes.api</span> <span class="kn">import</span> <span class="n">Float</span>
+
+<span class="c"># Import Numpy as np</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># Import the ANOPP2 API python interface.</span>
+<span class="kn">from</span> <span class="nn">ANOPP2_api</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c"># Import the ctypes.</span>
+<span class="kn">from</span> <span class="nn">ctypes</span> <span class="kn">import</span> <span class="o">*</span>
+
+<span class="c"># Import the OS.</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">openmdao.main.api</span> <span class="kn">import</span> <span class="n">Assembly</span>
+<span class="c">#from openmdao.lib.drivers.api import SLSQPdriver</span>
+
+<span class="c"># Import the Constrained Optimizer driver from the OpenMDAO Optimizers library.</span>
+<span class="kn">from</span> <span class="nn">openmdao.lib.drivers.api</span> <span class="kn">import</span> <span class="n">CONMINdriver</span>
+
+
+
+<span class="c">#====================================================================================</span>
+<span class="c"># This is the Anopp2Component class that receives the External code. This class is </span>
+<span class="c"># the crux of AOIC. This uses ANOPP2 function calls to perform various tasks for </span>
+<span class="c"># predicting noise.  Details of these functions, their syntax, purpose, and usage are</span>
+<span class="c"># explained in several ANOPP2 Manuals.  Users of ANOPP2 in OpenMDAO are required to</span>
+<span class="c"># develop this Anopp2Component specific to their problem. </span>
+<span class="c">#</span>
+<span class="c"># In this problem, the location of the Observer along a sideline parallel to the</span>
+<span class="c"># aircraft takeoff on the ground was determined at which the noise (Effective </span>
+<span class="c"># Perceived Noise Levels (EPNL)) is maximum. This determination is made using </span>
+<span class="c"># OpenMDAO by minimizing the reciprocal of the EPNL.</span>
+<span class="c">#====================================================================================</span>
+<span class="k">class</span> <span class="nc">Anopp2Component</span><span class="p">(</span><span class="n">ExternalCode</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">  All ANOPP2-capable components should be subclasses of Anopp2Component.</span>
+<span class="sd">   </span>
+<span class="sd">  By subclassing Anopp2Component, any component should have easy access to ANOPP2&#39;s</span>
+<span class="sd">  subcomponents, such as Observer, FlightPath, etc.</span>
+<span class="sd">  Refer to Documentation under Anopp2Component for additional information.</span>
+<span class="sd">  &quot;&quot;&quot;</span>
+
+  <span class="c"># This is the starting x location of the observer along the sideline, in terms of </span>
+  <span class="c"># meters. This is set as 2,410 m, the origin being the location at which the flight</span>
+  <span class="c"># originates.</span>
+  <span class="n">x</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="mf">2410.0</span><span class="p">,</span> <span class="n">iotype</span><span class="o">=</span><span class="s">&#39;in&#39;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s">&#39;The variable along the direction of flight&#39;</span><span class="p">)</span>
+  
+  <span class="c"># This is the inverse of the EpndB. This is the variable that will be optimized or</span>
+  <span class="c"># minimized.  This variable will be returned by this class.</span>
+  <span class="n">Epndb_inverse</span> <span class="o">=</span> <span class="n">Float</span><span class="p">(</span><span class="n">iotype</span><span class="o">=</span><span class="s">&#39;out&#39;</span><span class="p">,</span> <span class="n">desc</span><span class="o">=</span><span class="s">&#39;The inverse of the EPNdB&#39;</span><span class="p">)</span>
+
+  <span class="c"># Tags for the Atmosphere and Flight Path Data Structures. Although these Data </span>
+  <span class="c"># Structures will not be used in this demo, the variables are still required as </span>
+  <span class="c"># input for the routine that creates the mission.</span>
+  <span class="n">intAtmosphereTag</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  <span class="n">intFlightPathTag</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  
+  <span class="c">#  A tag for the observer, which will hold the noise results parsed from the ANOPP</span>
+  <span class="c">#  output.</span>
+  <span class="n">intObserverTag</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  
+  <span class="c"># A tag for the Functional Module.  For this demonstration program the Funtional </span>
+  <span class="c"># Module AnoppComplete will be used. A tag name must be declared as follows. This </span>
+  <span class="c"># tag is set by the a2py_exec_create_functional_module routine call.</span>
+  <span class="n">intAnoppCompleteTag</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  
+  <span class="c"># This is the number of input Data Structure tags that are required for the </span>
+  <span class="c"># Functional Module.  In this case, for the AnoppComplete Functional Module there </span>
+  <span class="c"># will be 0 inputs.</span>
+  <span class="n">nInputs</span> <span class="o">=</span> <span class="mi">0</span>
+  
+  <span class="c"># This is the array of input Data Structure tags, which again, will be of size 0.</span>
+  <span class="n">intInputTags</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">nInputs</span><span class="p">)()</span>
+  
+  <span class="c"># This is the number of results from the Functional Module stored in the Observer.</span>
+  <span class="n">nResults</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+  <span class="c"># An array of tags used to access the results in the Observer Data Structure. A </span>
+  <span class="c"># pointer to this array is returned by the AnoppComplete Functional module.</span>
+  <span class="n">intResultTags</span> <span class="o">=</span> <span class="n">pointer</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+  <span class="c"># ----------------------------------------------------------------------------------</span>
+  <span class="c"># Integers and arrays for holding the Functional Module tags and passing them into </span>
+  <span class="c"># the Mission.  ANOPP2 has 2 types of Functional Modules: &#39;Time Series&#39; or &#39;Single </span>
+  <span class="c"># Time&#39;. The AnoppComplete Functional Module is of type &#39;Time Series&#39;. Even if a </span>
+  <span class="c"># user is only utilizing one type of Functional Module, the definitions for arrays </span>
+  <span class="c"># and parameters need to be provided to the mission for both types.</span>
+  <span class="c">#-----------------------------------------------------------------------------------</span>
+
+  <span class="c"># A tag for the mission, which defines which Function Modules are executed.</span>
+  <span class="n">intMissionTag</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+  <span class="c"># The number of Time Series Functional Modules to be called in the mission.</span>
+  <span class="c"># For this demonstration there will be 1 (AnoppComplete Functional Module)</span>
+  <span class="n">nTimeSeriesFunctionalModules</span> <span class="o">=</span> <span class="mi">1</span>
+
+  <span class="c"># The array of Time Series functional module tags.  This is allocated to size 1</span>
+  <span class="c"># because there is 1 Time Series Functional Module in this prediction: the </span>
+  <span class="c"># AnoppComplete Functional Module.</span>
+  <span class="n">intTimeSeriesFunctionalModulesTags</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_int</span> <span class="o">*</span> <span class="n">nTimeSeriesFunctionalModules</span><span class="p">)()</span>
+
+  <span class="c"># Single Time definitions are set because the routine to create the mission requires</span>
+  <span class="c"># these arguments. This demonstration does not have any Single Time Functional </span>
+  <span class="c"># Modules, therefore all these are set to null or zero values.</span>
+
+  <span class="c"># The number of source times for the Single Time Functional Module (time in the </span>
+  <span class="c"># mission when specific functional modules are executed).  Since there is only a </span>
+  <span class="c"># Time Series Functional Module, this is not used and is set to 0.</span>
+  <span class="n">nSourceTimes</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="c"># The maximum number of Single Time Functional Modules executed at a single source </span>
+  <span class="c"># time. Since there are no Single Time Functional Modules defined in this </span>
+  <span class="c"># demonstration, this is set to zero.</span>
+  <span class="n">nMaximumSingleTimeFunctionalModules</span> <span class="o">=</span> <span class="mi">0</span>
+
+  <span class="c"># A 2-dimensional array of Single Time Functional Module tags.  The first dimension </span>
+  <span class="c"># is equal to the number of source times, the second is equal to the max number of </span>
+  <span class="c"># Functional Modules executed per source time.  These are both zero since this </span>
+  <span class="c"># demonstration does not have any Single Time Functional Modules</span>
+  <span class="n">intSingleTimeFunctionalModuleTags</span> <span class="o">=</span> <span class="n">pointer</span><span class="p">(</span><span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+  <span class="c"># An array to store the source times.  These can be retrieved from the Flight Path </span>
+  <span class="c"># API after the Flight Path is created.  However, since there are no Single Time</span>
+  <span class="c"># Functional Modules, this is allocated to size zero (nSourceTimes is 0).</span>
+  <span class="n">fltSourceTimes</span> <span class="o">=</span> <span class="n">pointer</span><span class="p">(</span><span class="n">c_float</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span>
+
+  <span class="c"># ----------------------------------------------------------------------------------</span>
+  <span class="c"># An integer success value.  This integer is returned from ANOPP2 API routine calls </span>
+  <span class="c"># to communicate the state of a given operation.  A return of 0 means success, </span>
+  <span class="c"># anything other than 0 indicates failure. Note the code execution does not depend </span>
+  <span class="c"># on this value, hence it is left to the user to check for success and take </span>
+  <span class="c"># appropriate action.</span>
+  <span class="c"># ----------------------------------------------------------------------------------</span>
+  <span class="n">intSuccess</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    
+  <span class="c"># This is the number of nodes existing in the Observer.</span>
+  <span class="n">nNodes</span> <span class="o">=</span> <span class="n">c_int</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+
+  <span class="c"># This is the Epnl corresponding to this node.</span>
+  <span class="n">fltEpnl</span> <span class="o">=</span> <span class="n">c_float</span><span class="p">(</span><span class="o">-</span><span class="mf">300.0</span><span class="p">)</span>
+  
+  <span class="c"># This is the Duration factor determined while calculating EPNL.</span>
+  <span class="n">fltD</span> <span class="o">=</span> <span class="n">c_float</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+  
+  <span class="c"># This is the minimum and maximum time of the EPNL integration.</span>
+  <span class="n">fltTimeRange</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_float</span> <span class="o">*</span> <span class="mi">2</span><span class="p">)(</span><span class="o">*</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+  
+  <span class="c"># This is an array of the position of the last node in the Observer Point Cloud.</span>
+  <span class="n">fltPosition</span> <span class="o">=</span> <span class="p">(</span><span class="n">c_float</span> <span class="o">*</span> <span class="mi">3</span><span class="p">)(</span><span class="o">*</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+  
+
+    
+  <span class="c">#===================================================================================</span>
+  <span class="c"># The Anopp2Component is initialized in this function. Several local variables are </span>
+  <span class="c"># also initialized. An Observer is created based on the details provided in </span>
+  <span class="c"># observer.config. </span>
+  <span class="c">#===================================================================================</span>
+  <span class="k">def</span> <span class="nf">__init__</span> <span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Initialize the Anopp2 class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">super</span><span class="p">(</span><span class="n">Anopp2Component</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">()</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 1.</span>
+    <span class="c"># The ANOPP2 API must be initialized before any of the routines can be executed </span>
+    <span class="c"># and should have false as it&#39;s argument.</span>
+    <span class="c">#=================================================================================</span>
+    <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_init_api</span> <span class="p">()</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 2.</span>
+    <span class="c"># Create the necessary Data Structures required by the Anopp Complete Functional </span>
+    <span class="c"># Module. Set the tag numbers to zero for the Data Structures that ANOPP will </span>
+    <span class="c"># generate internally when it is executed.  This are necessary becuase the </span>
+    <span class="c"># variables are requried in the definition of the routine that creates the </span>
+    <span class="c"># mission. The Observer must be given to the Functional Module, so it must be </span>
+    <span class="c"># created from a configuration file.</span>
+    <span class="c">#=================================================================================</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">intAtmosphereTag</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">intFlightPathTag</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 3.</span>
+    <span class="c"># Construct an observer point (only a single point is used for serial execution) </span>
+    <span class="c"># from a configuration file.  This is done by using the create function of the </span>
+    <span class="c"># Observer API and passing a blank observer tag and the file name.  The necessary</span>
+    <span class="c">#  configuration file accompanies this demonstrator..</span>
+    <span class="c">#=================================================================================</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>             \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_create</span> \
+       <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">),</span> <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;observer.config&quot;</span><span class="p">))</span>
+
+
+
+  <span class="c">#===================================================================================</span>
+  <span class="c"># The execute function gets executed by OpenMDAO repeatedly until the specified</span>
+  <span class="c"># exit criteria are met. The steps followed in this function are:</span>
+  <span class="c">#   1. Obtain the number of nodes available in the observer.</span>
+  <span class="c">#   2. Obtain the position vector of the lsat node in the observer.</span>
+  <span class="c">#   3. Replace the x-coordinate of this position vector with that provided by the</span>
+  <span class="c">#      OpenMDAO optimizer.</span>
+  <span class="c">#   4. Insert a new node in the observer with a position vector as defined through</span>
+  <span class="c">#      steps 2 through 4.</span>
+  <span class="c">#   5. Create an AnoppComplete Functional Module based on the config file,</span>
+  <span class="c">#      &quot;AnoppComplete.config&quot;.</span>
+  <span class="c">#   6. Create a mission for running AnoppComplete functional module and executing </span>
+  <span class="c">#      ANOPP to obtain noise due to Jet, Inlet, Aft Fan, Core, Gear, Flap, and </span>
+  <span class="c">#      Trailing edge are all added to obtain the total noise. This noise is then</span>
+  <span class="c">#      propagated to the ground observer.</span>
+  <span class="c">#   7. Execute the mission to obtain the total noise on the ground observer.</span>
+  <span class="c">#   8. Obtain the number of results in the Observer.</span>
+  <span class="c">#   9. Obtain the number of nodes in the Observer.</span>
+  <span class="c">#  10. Calculate the EPNL from the acoustic data predicted by the AnoppComplete</span>
+  <span class="c">#      functional module.</span>
+  <span class="c">#  11. Get the EPNL value of the last node.</span>
+  <span class="c">#  12. If the EPNL value is valid, get its inverse. The inverse of the EPNL is </span>
+  <span class="c">#      numerically small. Multiply it with 1000 and treat this as EpndB_inverse.</span>
+  <span class="c">#  13. Export the results to a Tecplot-friendly file.</span>
+  <span class="c">#  14. Delete the results because we do not need it any more.</span>
+  <span class="c">#===================================================================================</span>
+  <span class="k">def</span> <span class="nf">execute</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Obtain a given Observer location, find the noise at that location. Use such </span>
+<span class="sd">    noise values to optimize and locate the Observer location that has the maximum </span>
+<span class="sd">    noise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+       
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 4. We need to introduce a new node at a location provided by the optimizer.</span>
+    <span class="c"># To do that, we need to first find the location of the last node in the observer, </span>
+    <span class="c"># replace the x coordinate of this node location with that provided by the </span>
+    <span class="c"># optimizer, and then introduce it as a new node in the point cloud.</span>
+    <span class="c">#=================================================================================</span>
+
+    <span class="c"># Get the number of nodes in the Observer.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_number_of_nodes</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="p">)</span>
+    
+    <span class="c"># Get the coordinates of the last node.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>               \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_position</span> \
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">a2_global</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">)</span>
+        
+    <span class="c"># Replace the x coordinates of this array with that from the class. Rest of the </span>
+    <span class="c"># coordinates remain the same.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">x</span>
+    
+    <span class="c"># Insert a new node to the Point Cloud in the Observer.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_new_node</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">)</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 5.</span>
+    <span class="c"># Create the AnoppComplete Functional Module.</span>
+    <span class="c">#=================================================================================</span>
+    
+    <span class="c"># Create the AnoppComplete Functional Module by passing an empty tag number (to be</span>
+    <span class="c"># filled), the configuration file name, the number of inputs, the list of Data </span>
+    <span class="c"># structure Tags, a pointer to the Observer tag, the number of results, and a </span>
+    <span class="c"># pointer to the array of result tags. The number of results and the result tags </span>
+    <span class="c"># are returned from the create function and can be used to later access the data </span>
+    <span class="c"># stored in the Observer Data Structure.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                                                                 \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_create_functional_module</span>                                  \
+       <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intAnoppCompleteTag</span><span class="p">),</span>                                       \
+        <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;AnoppComplete.config&quot;</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">nInputs</span><span class="p">,</span>            \
+        <span class="bp">self</span><span class="o">.</span><span class="n">intInputTags</span><span class="p">,</span> <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">),</span> <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="p">),</span> \
+        <span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">))</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 6.</span>
+    <span class="c"># Create the Mission.  The Mission is the definition of what Functional Modules </span>
+    <span class="c"># will be executed. In this example, only the AnoppComplete Functional Module will</span>
+    <span class="c"># be executed for all time.</span>
+    <span class="c">#=================================================================================</span>
+
+    <span class="c"># Since the only Time Series Functional Module being used is AnoppComplete, assign</span>
+    <span class="c"># it to the first and only index of the array (if there was a second Time Series </span>
+    <span class="c"># Functional Module, it would be assigned to the second index of the array).</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">intTimeSeriesFunctionalModulesTags</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">intAnoppCompleteTag</span>
+
+    <span class="c"># To create a mission, each Functional Module tag must be added to the Mission </span>
+    <span class="c"># according to its type placed in arrays of the appropriate structure.  If Single </span>
+    <span class="c"># Time Functional Modules exist, then their tags would be placed into a two </span>
+    <span class="c"># dimensional array corresponding to waypoints and number of Single Time </span>
+    <span class="c"># Functional Modules. Time Series Functional Modules have their tags placed in a </span>
+    <span class="c"># one dimensional array. The routine to create a Mission also requires the </span>
+    <span class="c"># waypoint times, and the Atmosphere and Flight Path tags, regardless of  whether </span>
+    <span class="c"># they are being used. In this case they are not, so their values are set to zero.</span>
+    <span class="c"># Note: This demonstration program has only one Functional Module: AnoppComplete. </span>
+    <span class="c"># This is a Time Series Functional Module and therefore, all Single Time </span>
+    <span class="c"># Functional Module inputs are left empty.  The only reason they are needed is </span>
+    <span class="c"># because the a2py_exec_create_mission requires them.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                                                                     \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_create_mission</span>                                                \
+       <span class="p">(</span><span class="n">pointer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intMissionTag</span><span class="p">),</span> <span class="n">create_string_buffer</span> <span class="p">(</span><span class="n">b</span><span class="s">&quot;&quot;</span><span class="p">),</span>                     \
+        <span class="bp">self</span><span class="o">.</span><span class="n">intAtmosphereTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intFlightPathTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nSourceTimes</span><span class="p">,</span>             \
+        <span class="bp">self</span><span class="o">.</span><span class="n">nMaximumSingleTimeFunctionalModules</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nTimeSeriesFunctionalModules</span><span class="p">,</span> \
+        <span class="bp">self</span><span class="o">.</span><span class="n">fltSourceTimes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intSingleTimeFunctionalModuleTags</span><span class="p">,</span>                 \
+        <span class="bp">self</span><span class="o">.</span><span class="n">intTimeSeriesFunctionalModulesTags</span><span class="p">)</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 7.</span>
+    <span class="c"># Execute the Mission.  The Mission performs the noise prediction.  This call </span>
+    <span class="c"># tells the Mission to execute all Functional Modules at the time specified. This </span>
+    <span class="c"># will in turn execute ANOPP, producing a fort.4 that will be renamed to the </span>
+    <span class="c"># output specified in the configuration file</span>
+    <span class="c">#=================================================================================</span>
+
+    <span class="c">#  Call the routine that executes the Mission</span>
+    <span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_exec_execute_mission</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intMissionTag</span><span class="p">)</span>
+    
+    <span class="c"># Get the number of results in the Observer.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span> \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_number_of_results</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="p">)</span>
+
+    <span class="c">#=================================================================================</span>
+    <span class="c"># Step 8.</span>
+    <span class="c"># Calculate metrics and report the results. After the Mission is executed, the </span>
+    <span class="c"># Observer Data Structure contains the prediction results. These results can be </span>
+    <span class="c"># accessed to calculate derived metrics and reported to an external file using </span>
+    <span class="c"># Observer API routine calls.  To calculate metrics, the Observer API provides </span>
+    <span class="c"># specific acoustic analysis functionality that can be invoked via input </span>
+    <span class="c"># enumerators.  A list of the enumerators available for the Observer API routines </span>
+    <span class="c"># can be found in the Observer API User&#39;s Manual.</span>
+    <span class="c">#=================================================================================</span>
+       
+    <span class="c"># Get the number of nodes in the Observer.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span> <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_number_of_nodes</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="p">)</span>
+
+    <span class="c"># The first step is to calculate any derived metrics. For this demonstrator, EPNL </span>
+    <span class="c"># is calculated. The first argument in the call is the observer tag. The second </span>
+    <span class="c"># argument is the array containing the result tags associated with the observer</span>
+    <span class="c"># locations.  In this case there are three results, Engine, Airframe, and Total. </span>
+    <span class="c"># The third argument is an enumerator for what noise metric will be calculated and</span>
+    <span class="c"># returned by this call. For this demonstration the metric is EPNL. The last </span>
+    <span class="c"># argument is an enumerator that tells the Observer API that the EPNL has to be&#39;</span>
+    <span class="c"># calculated based on the complete time history.  This is defined by the </span>
+    <span class="c"># enumerator, a2_obs_complete.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                                                                  \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_calc_metric</span>                                                 \
+       <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">,</span> <span class="n">a2_aa_epnl</span><span class="p">,</span> \
+        <span class="n">a2_obs_complete</span><span class="p">)</span>
+
+    <span class="c"># Get the EPNL value for the last node which is the node that was inserted into </span>
+    <span class="c"># the Observer.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                                                        \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_get_epnl</span>                                          \
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">nNodes</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> \
+         <span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltD</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltTimeRange</span><span class="p">)</span>
+    
+    <span class="c"># Ensure that the EPNL obtained from the Observer is greater than zero and is not </span>
+    <span class="c"># none.</span>
+    <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="o">.</span><span class="n">value</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">):</span>
+
+      <span class="c"># Set the Epndb inverse as the reciprocal of the Epndb.</span>
+      <span class="bp">self</span><span class="o">.</span><span class="n">Epndb_inverse</span> <span class="o">=</span> <span class="mf">1000.0</span><span class="o">/</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+
+    <span class="c"># Print the Location and the EPNL values to the screen.</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s">&quot;Location: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltPosition</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">print</span> <span class="p">(</span><span class="s">&quot;EPNL: &quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">fltEpnl</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+    
+    <span class="c"># Set the Output file name for exporting the EPNL to a file.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">strOutputFile</span> <span class="o">=</span> <span class="s">&quot;Epnl.out.dat&quot;</span>
+    
+    <span class="c"># Export the result to a file.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                                                                 \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_export</span>                                                     \
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>                             \
+         <span class="n">create_string_buffer</span><span class="p">(</span><span class="nb">bytes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">strOutputFile</span><span class="p">)),</span> <span class="n">a2_aa_epnl</span><span class="p">,</span> <span class="n">a2_global</span><span class="p">,</span> \
+         <span class="n">a2_formatted</span><span class="p">,</span> <span class="n">a2_tecplot</span><span class="p">)</span>
+    
+    <span class="c"># Delete the results because we don&#39;t need them any more.</span>
+    <span class="n">intSuccess</span> <span class="o">=</span>                     \
+      <span class="n">ANOPP2</span><span class="o">.</span><span class="n">a2py_obs_delete_results</span> \
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">intObserverTag</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nResults</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">intResultTags</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+
+
+<span class="c">#====================================================================================</span>
+<span class="c"># This class contains the optimizer. It defines the design variable (the variable </span>
+<span class="c"># that has to be varied) and the parameter to be minimized (Epndb_inverse) and calls </span>
+<span class="c"># the Anopp2Component class repeatedly. It also specifies the driver to be used for</span>
+<span class="c"># optimization and the criteria for optimizing and exiting the optimization.</span>
+<span class="c"># This class performs the following steps:</span>
+<span class="c">#   1. It adds the Driver to be used and assigns a name to it. Two drivers have been </span>
+<span class="c">#      tried out: SLSQPdriver and CONMINdriver.</span>
+<span class="c">#   2. It adds the Anopp2Component class and assigns a name to it.</span>
+<span class="c">#   3. It adds this Anopp2Component to the Workflow of the driver.</span>
+<span class="c">#   4. It specifies the interval to display the optimization details.</span>
+<span class="c">#   5. It then adds the Objective variable and the parameter variable to be minimed.</span>
+<span class="c">#   6. Depending on the driver chosen it specifies the set of parameters for </span>
+<span class="c">#      optimization. </span>
+<span class="c">#====================================================================================</span>
+<span class="k">class</span> <span class="nc">Anopp2Optimize</span><span class="p">(</span><span class="n">Assembly</span><span class="p">):</span>
+  <span class="sd">&quot;&quot;&quot;Unconstrained Optimization to locate the Observer location corresponding to </span>
+<span class="sd">  maximum EpndB&quot;&quot;&quot;</span>
+
+
+
+  <span class="k">def</span> <span class="nf">configure</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+    <span class="c"># Create an optimizer instance (Uncomment the following statement if SLSQP driver </span>
+    <span class="c"># is to be used, and comment the next statement.</span>
+<span class="c">#    self.add(&#39;driver&#39;, SLSQPdriver())</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;driver&#39;</span><span class="p">,</span> <span class="n">CONMINdriver</span><span class="p">())</span>
+    
+    <span class="c"># Create Anopp2 component instance.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;anopp2&#39;</span><span class="p">,</span> <span class="n">Anopp2Component</span><span class="p">())</span>
+    
+    <span class="c"># Iteration hierarchy</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">workflow</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;anopp2&#39;</span><span class="p">)</span>
+    
+    <span class="c"># SLSQP Flags</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">iprint</span> <span class="o">=</span> <span class="mi">1</span>
+    
+    <span class="c"># Objective</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">add_objective</span><span class="p">(</span><span class="s">&#39;anopp2.Epndb_inverse&#39;</span><span class="p">)</span>
+    
+    <span class="c"># Design variable</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">add_parameter</span><span class="p">(</span><span class="s">&#39;anopp2.x&#39;</span><span class="p">,</span> <span class="n">low</span><span class="o">=</span><span class="mf">2400.</span><span class="p">,</span> <span class="n">high</span><span class="o">=</span><span class="mf">3500.0</span><span class="p">)</span>
+    
+    <span class="c"># Set the SLSQP-specific settings. Uncomment the following if SLSQP Driver is to</span>
+    <span class="c"># be used.</span>
+<span class="c">#    self.driver.accuracy = 1.0e-08</span>
+<span class="c">#    self.driver.maxiter = 50</span>
+    
+    <span class="c"># Set the CONMIN-specific settings. Comment the following if SLSQP Driver is to be</span>
+    <span class="c"># used.</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">itmax</span> <span class="o">=</span> <span class="mi">30</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">fdch</span> <span class="o">=</span> <span class="mf">0.001</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">fdchm</span> <span class="o">=</span> <span class="mf">0.0001</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">ctlmin</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">delfun</span> <span class="o">=</span> <span class="mf">0.01</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">driver</span><span class="o">.</span><span class="n">conmin_diff</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">iIteration</span> <span class="o">=</span> <span class="mi">0</span>
+        
+</pre></div>
+</td></tr></table></div>
+<p>The code for testing this <cite>AOIC.py</cite> is provided as <a class="reference internal" href="#test-aoic-py">test_aoic.py</a>.</p>
+</div>
+<div class="section" id="test-aoic-py">
+<h2>test_aoic.py<a class="headerlink" href="#test-aoic-py" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#====================================================================================</span>
+<span class="c"># This program is a unit test that tests the Anopp2 optimization problem.</span>
+<span class="c">#====================================================================================</span>
+
+<span class="c"># Import the unittest module/class.</span>
+<span class="kn">import</span> <span class="nn">unittest</span>
+
+<span class="c"># Import set_as_top from the OpenMDAO Main API.</span>
+<span class="kn">from</span> <span class="nn">openmdao.main.api</span> <span class="kn">import</span> <span class="n">set_as_top</span>
+
+<span class="c"># Import Anopp2Optimize class from the anopp2 folder.</span>
+<span class="kn">from</span> <span class="nn">anopp2.anopp2</span> <span class="kn">import</span> <span class="n">Anopp2Optimize</span>
+
+
+
+<span class="c">#====================================================================================</span>
+<span class="c"># This class runs the unit tests that in turn tests the Anopp2 Optimization problem.</span>
+<span class="c">#====================================================================================</span>
+<span class="k">class</span> <span class="nc">Anopp2TestCase</span><span class="p">(</span><span class="n">unittest</span><span class="o">.</span><span class="n">TestCase</span><span class="p">):</span>
+
+  <span class="c"># There is nothing to setup here.</span>
+  <span class="k">def</span> <span class="nf">setUp</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">pass</span>
+        
+  <span class="c"># There is nothing to teardown here.</span>
+  <span class="k">def</span> <span class="nf">tearDown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">pass</span>
+        
+  <span class="c"># This function tests the ANOPP2 component.</span>
+  <span class="k">def</span> <span class="nf">test_Anopp2</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    
+    <span class="c"># Import the time module so we can assess the time taken to run this test.</span>
+    <span class="kn">import</span> <span class="nn">time</span>
+  
+    <span class="c"># This is the iteration number.</span>
+    <span class="n">iIteration</span> <span class="o">=</span> <span class="mi">0</span>
+  
+    <span class="c"># This is the increment in x that we want to jump to determine a local maximum.</span>
+    <span class="n">fltdelta_x</span> <span class="o">=</span> <span class="mf">100.0</span>
+      
+    <span class="c"># Set the current optimization problem as ANOPP2 Optimize.</span>
+    <span class="n">opt_problem</span> <span class="o">=</span> <span class="n">Anopp2Optimize</span><span class="p">()</span>
+    
+    <span class="c"># Run the set_as_top function for the Anopp2 Optimize problem.</span>
+    <span class="n">set_as_top</span><span class="p">(</span><span class="n">opt_problem</span><span class="p">)</span>
+  
+    <span class="c"># Set the time as tt.</span>
+    <span class="n">tt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c"># Execute the Anopp2Optimize</span>
+    <span class="n">opt_problem</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+
+    <span class="c"># Write messages on the screen when a maximum noise is found.  </span>
+    <span class="k">print</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span>
+    <span class="k">print</span> <span class="s">&quot;Local Maximum found at (</span><span class="si">%f</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">opt_problem</span><span class="o">.</span><span class="n">anopp2</span><span class="o">.</span><span class="n">x</span>
+    <span class="k">print</span> <span class="s">&quot;EPNdB at this maximum (</span><span class="si">%f</span><span class="s">)&quot;</span> <span class="o">%</span> <span class="n">opt_problem</span><span class="o">.</span><span class="n">anopp2</span><span class="o">.</span><span class="n">fltEpnl</span><span class="o">.</span><span class="n">value</span>
+    <span class="k">print</span> <span class="s">&quot;Elapsed time: &quot;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">tt</span><span class="p">,</span> <span class="s">&quot;seconds&quot;</span>
+        
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">unittest</span><span class="o">.</span><span class="n">main</span><span class="p">()</span>
+    
+</pre></div>
+</td></tr></table></div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Source Documentation</a><ul>
+<li><a class="reference internal" href="#aoic-py">AOIC.py</a></li>
+<li><a class="reference internal" href="#test-aoic-py">test_aoic.py</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="usage.html"
+                        title="previous chapter">Usage Guide</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="pkgdocs.html"
+                        title="next chapter">Package Metadata</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/srcdocs.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="pkgdocs.html" title="Package Metadata"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="usage.html" title="Usage Guide"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">AOIC 1.0 beta documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &copy; Copyright .
+      Last updated on Jun 11, 2015.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 1.3.1.
+    </div>
+  </body>
+</html>
